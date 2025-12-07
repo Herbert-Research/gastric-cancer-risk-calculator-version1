@@ -834,7 +834,6 @@ class TestVisualizationIntegration:
     def test_plot_individual_predictions(self, tmp_path):
         """Test plotting individual predictions."""
         from risk_calculator import run_example_patients
-
         from utils.visualization import plot_individual_predictions
 
         model = GastricCancerRiskModel(load_model_config())
