@@ -316,14 +316,14 @@ class TestPlotContent:
 
 class TestVisualizationEdgeCases:
     """Additional edge case tests for visualization functions.
-    
+
     These tests verify that visualization functions handle unusual inputs
     gracefully, including NaN values, single-bin scenarios, and empty data.
     """
 
     def test_survival_predictions_with_nan_values(self):
         """Ensure NaN survival values don't crash plotting.
-        
+
         When some patients have missing survival predictions, the plotting
         function should skip those rows rather than crashing.
         """
@@ -333,7 +333,13 @@ class TestVisualizationEdgeCases:
             {
                 "Patient": ["A", "B", "C", "D", "E"],
                 "Risk": [0.15, 0.35, 0.55, 0.65, 0.85],
-                "Category": ["Low Risk", "Moderate Risk", "High Risk", "High Risk", "Very High Risk"],
+                "Category": [
+                    "Low Risk",
+                    "Moderate Risk",
+                    "High Risk",
+                    "High Risk",
+                    "Very High Risk",
+                ],
                 "survival_5yr": [0.8, np.nan, 0.6, 0.4, 0.2],
                 "survival_10yr": [0.7, 0.5, np.nan, 0.3, 0.1],
                 "survival_category": [
@@ -355,7 +361,7 @@ class TestVisualizationEdgeCases:
 
     def test_survival_vs_recurrence_with_partial_nan(self):
         """Test survival vs recurrence plot with some NaN values.
-        
+
         The plot should use only rows with complete data.
         """
         import numpy as np
@@ -375,14 +381,18 @@ class TestVisualizationEdgeCases:
 
     def test_calibration_with_extreme_predictions(self):
         """Test calibration curve with predictions at boundaries (0 and 1).
-        
+
         Edge case where some predictions are exactly 0 or 1.
         """
         df = pd.DataFrame(
             {
                 "Patient": [f"P{i}" for i in range(20)],
-                "Risk": [0.0, 0.0, 0.05, 0.1] + [0.3 + 0.03 * i for i in range(12)] + [0.95, 1.0, 1.0, 1.0],
-                "event_observed": [0, 0, 0, 0] + [1 if i % 2 == 0 else 0 for i in range(12)] + [1, 1, 1, 1],
+                "Risk": [0.0, 0.0, 0.05, 0.1]
+                + [0.3 + 0.03 * i for i in range(12)]
+                + [0.95, 1.0, 1.0, 1.0],
+                "event_observed": [0, 0, 0, 0]
+                + [1 if i % 2 == 0 else 0 for i in range(12)]
+                + [1, 1, 1, 1],
             }
         )
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -397,7 +407,7 @@ class TestVisualizationEdgeCases:
 
     def test_calibration_with_imbalanced_classes(self):
         """Test calibration curve with highly imbalanced classes.
-        
+
         When events are rare (or very common), the calibration should still work.
         """
         # 5% event rate
@@ -418,7 +428,7 @@ class TestVisualizationEdgeCases:
 
     def test_tcga_summary_single_stage_combination(self):
         """Test TCGA summary with only one stage combination.
-        
+
         Edge case where all patients have the same staging.
         """
         df = pd.DataFrame(
@@ -436,7 +446,7 @@ class TestVisualizationEdgeCases:
 
     def test_individual_predictions_large_cohort(self):
         """Test individual predictions with a larger cohort.
-        
+
         Verify the function handles 100+ patients efficiently.
         """
         n_patients = 150
@@ -462,7 +472,7 @@ class TestVisualizationEdgeCases:
 
     def test_survival_predictions_all_same_category(self):
         """Test survival predictions where all patients have the same prognosis.
-        
+
         This tests the color mapping when only one category is present.
         """
         df = pd.DataFrame(
@@ -497,7 +507,7 @@ class TestVisualizationEdgeCases:
 
     def test_calibration_with_identical_predictions(self):
         """Test calibration curve when all predictions are identical.
-        
+
         Edge case that might cause division issues in binning.
         """
         df = pd.DataFrame(
