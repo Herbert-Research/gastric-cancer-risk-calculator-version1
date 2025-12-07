@@ -1,0 +1,4 @@
+# file: C:\Users\m4rti\Documents\GitHub\gastric-cancer-risk-calculator-version1\utils\logging_config.py
+# hypothesis_version: 6.148.7
+
+['%(asctime)s | ', '%Y-%m-%d %H:%M:%S', 'PYTEST_CURRENT_TEST', 'gastric_risk', 'pytest', 'replace', 'utf-8', 'win32']

@@ -6,8 +6,8 @@ Tests Brier score calculation, model predictions, and survival estimates.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -18,12 +18,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from models.cox_model import CoxModel  # noqa: E402
 from risk_calculator import (  # noqa: E402
     DEFAULT_MODEL_CONFIG,
     GastricCancerRiskModel,
     load_model_config,
 )
-from models.cox_model import CoxModel  # noqa: E402
 
 
 class TestBrierScore:
@@ -103,7 +103,7 @@ class TestSurvivalEstimates:
     def survival_model(self):
         """Load the Han 2012 survival model."""
         config_path = PROJECT_ROOT / "models" / "han2012_jco.json"
-        with open(config_path, "r", encoding="utf-8") as stream:
+        with open(config_path, encoding="utf-8") as stream:
             config = json.load(stream)
         return CoxModel(config)
 
@@ -142,20 +142,34 @@ class TestSurvivalEstimates:
         Han 2012 published value of ~78-80%.
         """
         test_patients = [
-            {"age": "50-59", "sex": "male", "location": "lower",
-             "depth_of_invasion": "submucosa", "metastatic_lymph_nodes": "0",
-             "examined_lymph_nodes": 25},
-            {"age": "60-69", "sex": "female", "location": "middle",
-             "depth_of_invasion": "proper_muscle", "metastatic_lymph_nodes": "1-2",
-             "examined_lymph_nodes": 28},
-            {"age": "50-59", "sex": "male", "location": "lower",
-             "depth_of_invasion": "subserosa", "metastatic_lymph_nodes": "3-6",
-             "examined_lymph_nodes": 30},
+            {
+                "age": "50-59",
+                "sex": "male",
+                "location": "lower",
+                "depth_of_invasion": "submucosa",
+                "metastatic_lymph_nodes": "0",
+                "examined_lymph_nodes": 25,
+            },
+            {
+                "age": "60-69",
+                "sex": "female",
+                "location": "middle",
+                "depth_of_invasion": "proper_muscle",
+                "metastatic_lymph_nodes": "1-2",
+                "examined_lymph_nodes": 28,
+            },
+            {
+                "age": "50-59",
+                "sex": "male",
+                "location": "lower",
+                "depth_of_invasion": "subserosa",
+                "metastatic_lymph_nodes": "3-6",
+                "examined_lymph_nodes": 30,
+            },
         ]
 
         survivals = [
-            survival_model.predict_patient_survival(patient)[5]
-            for patient in test_patients
+            survival_model.predict_patient_survival(patient)[5] for patient in test_patients
         ]
         mean_survival = sum(survivals) / len(survivals)
 

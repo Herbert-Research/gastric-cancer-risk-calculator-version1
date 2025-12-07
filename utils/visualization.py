@@ -191,7 +191,7 @@ def plot_tcga_summary(cohort_results: pd.DataFrame, output_dir: Path, show_plots
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
     sns.histplot(
-        cohort_results["Risk"] * 100,  # type: ignore[reportArgumentType]
+        cohort_results["Risk"] * 100,
         bins=20,
         kde=False,
         ax=axes[0],
@@ -233,7 +233,7 @@ def plot_tcga_summary(cohort_results: pd.DataFrame, output_dir: Path, show_plots
         bbox={"facecolor": "lightblue", "alpha": 0.4},
     )
 
-    plt.tight_layout(rect=[0, 0.03, 1, 1])  # Leave space for annotation
+    plt.tight_layout(rect=(0, 0.03, 1, 1))  # Leave space for annotation
     return finalize_figure(fig, output_dir / FIG_TCGA_SUMMARY, show_plots)
 
 
@@ -242,8 +242,29 @@ def plot_calibration_curve(
     output_dir: Path,
     show_plots: bool,
     label_column: str,
-) -> tuple[Path, float] | None:
-    """Plot calibration curve using disease-free status as a proxy for recurrence."""
+    n_bootstrap: int = 1000,
+) -> tuple[Path, float, float, float] | None:
+    """Plot calibration curve using disease-free status as a proxy for recurrence.
+
+    Parameters
+    ----------
+    cohort_results : pd.DataFrame
+        DataFrame containing predicted risks and event labels.
+    output_dir : Path
+        Directory to save the figure.
+    show_plots : bool
+        Whether to display interactive plots.
+    label_column : str
+        Column name containing binary event labels.
+    n_bootstrap : int, optional
+        Number of bootstrap iterations for CI (default: 1000).
+
+    Returns
+    -------
+    tuple[Path, float, float, float] | None
+        Tuple of (figure_path, brier_score, ci_lower, ci_upper) or None if
+        calibration cannot be computed.
+    """
 
     if label_column not in cohort_results:
         print("No event labels available for calibration.")
@@ -261,11 +282,18 @@ def plot_calibration_curve(
         print("scikit-learn not available; skipping calibration diagnostics.")
         return None
 
-    y_true = valid[label_column].astype(float)
-    y_pred = valid["Risk"].astype(float)
+    from utils.bootstrap import bootstrap_metric
+    import numpy as np
+
+    y_true = valid[label_column].astype(float).to_numpy()
+    y_pred = valid["Risk"].astype(float).to_numpy()
 
     prob_true, prob_pred = calibration_curve(y_true, y_pred, n_bins=10, strategy="quantile")
-    brier = brier_score_loss(y_true, y_pred)
+
+    # Compute Brier score with bootstrap confidence interval
+    brier, ci_lower, ci_upper = bootstrap_metric(
+        y_true, y_pred, brier_score_loss, n_bootstrap=n_bootstrap, random_state=42
+    )
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.plot(prob_pred, prob_true, marker="o", linewidth=2, label="Observed")
@@ -280,9 +308,12 @@ def plot_calibration_curve(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.legend()
-    # Add detailed annotation explaining poor calibration
+    # Add detailed annotation explaining poor calibration with CI
     annotation_text = (
-        f"Brier Score = {brier:.3f}\n" f"(reflects endpoint mismatch:\n" f"recurrence risk vs. DFS)"
+        f"Brier Score = {brier:.3f}\n"
+        f"(95% CI: {ci_lower:.3f}–{ci_upper:.3f})\n"
+        f"(reflects endpoint mismatch:\n"
+        f"recurrence risk vs. DFS)"
     )
     ax.text(
         0.05,
@@ -301,4 +332,4 @@ def plot_calibration_curve(
 
     plt.tight_layout()
     path = finalize_figure(fig, output_dir / FIG_CALIBRATION, show_plots)
-    return path, float(brier)
+    return path, float(brier), float(ci_lower), float(ci_upper)

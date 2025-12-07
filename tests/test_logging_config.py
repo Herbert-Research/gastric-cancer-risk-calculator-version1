@@ -6,9 +6,7 @@ import logging
 import tempfile
 from pathlib import Path
 
-import pytest
-
-from utils.logging_config import setup_logging, get_logger
+from utils.logging_config import get_logger, setup_logging
 
 
 class TestSetupLogging:
@@ -39,10 +37,10 @@ class TestSetupLogging:
         """Test that setup clears existing handlers."""
         logger = setup_logging()
         initial_count = len(logger.handlers)
-        
+
         # Setup again
         logger = setup_logging()
-        
+
         # Should have same number of handlers (cleared then added)
         assert len(logger.handlers) == initial_count
 
@@ -60,30 +58,29 @@ class TestSetupLogging:
 
     def test_setup_logging_with_file(self):
         """Test logging to file."""
-        import atexit
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             log_file = Path(tmpdir) / "test.log"
             logger = setup_logging(log_file=log_file)
-            
+
             # Should have 2 handlers (console + file)
             assert len(logger.handlers) == 2
-            
+
             # Log a message
             logger.info("Test message")
-            
+
             # Force flush and close the file handler before checking content
             for handler in logger.handlers:
                 handler.flush()
-            
+
             # Check file exists and has content
             assert log_file.exists()
             content = log_file.read_text()
             assert "Test message" in content
-            
+
             # Clean up handlers to allow temp directory deletion
             for handler in logger.handlers[:]:
-                if hasattr(handler, 'close'):
+                if hasattr(handler, "close"):
                     handler.close()
             logger.handlers.clear()
 
@@ -92,22 +89,22 @@ class TestSetupLogging:
         with tempfile.TemporaryDirectory() as tmpdir:
             log_file = Path(tmpdir) / "test.log"
             logger = setup_logging(log_file=log_file, include_timestamp=False)
-            
+
             logger.info("Test message")
-            
+
             # Force flush before reading
             for handler in logger.handlers:
                 handler.flush()
-            
+
             content = log_file.read_text()
-            
+
             # Should contain level and name, but not timestamp
             assert "INFO" in content
             assert "Test message" in content
-            
+
             # Clean up handlers
             for handler in logger.handlers[:]:
-                if hasattr(handler, 'close'):
+                if hasattr(handler, "close"):
                     handler.close()
             logger.handlers.clear()
 
@@ -116,22 +113,22 @@ class TestSetupLogging:
         with tempfile.TemporaryDirectory() as tmpdir:
             log_file = Path(tmpdir) / "test.log"
             logger = setup_logging(log_file=log_file, include_timestamp=True)
-            
+
             logger.info("Test message")
-            
+
             # Force flush before reading
             for handler in logger.handlers:
                 handler.flush()
-            
+
             content = log_file.read_text()
-            
+
             # Should contain timestamp-like pattern
             assert "INFO" in content
             assert "Test message" in content
-            
+
             # Clean up handlers
             for handler in logger.handlers[:]:
-                if hasattr(handler, 'close'):
+                if hasattr(handler, "close"):
                     handler.close()
             logger.handlers.clear()
 
@@ -164,7 +161,7 @@ class TestLoggingOutput:
         """Test that INFO messages are logged to stdout."""
         logger = setup_logging(level=logging.INFO)
         logger.info("Test INFO message")
-        
+
         captured = capfd.readouterr()
         assert "Test INFO message" in captured.out
 
@@ -172,7 +169,7 @@ class TestLoggingOutput:
         """Test that DEBUG messages are not logged at INFO level."""
         logger = setup_logging(level=logging.INFO)
         logger.debug("Test DEBUG message")
-        
+
         captured = capfd.readouterr()
         assert "Test DEBUG message" not in captured.out
 
@@ -180,7 +177,7 @@ class TestLoggingOutput:
         """Test that DEBUG messages are logged at DEBUG level."""
         logger = setup_logging(level=logging.DEBUG)
         logger.debug("Test DEBUG message")
-        
+
         captured = capfd.readouterr()
         assert "Test DEBUG message" in captured.out
 
@@ -188,7 +185,7 @@ class TestLoggingOutput:
         """Test that WARNING messages are logged."""
         logger = setup_logging(level=logging.INFO)
         logger.warning("Test WARNING message")
-        
+
         captured = capfd.readouterr()
         assert "Test WARNING message" in captured.out
 
@@ -196,6 +193,6 @@ class TestLoggingOutput:
         """Test that ERROR messages are logged."""
         logger = setup_logging(level=logging.INFO)
         logger.error("Test ERROR message")
-        
+
         captured = capfd.readouterr()
         assert "Test ERROR message" in captured.out

@@ -72,6 +72,8 @@ Standardized D2 gastrectomy is the cornerstone of curative gastric cancer treatm
 
 **Implementation Approach:** Baseline survival values (S₅=0.52, S₁₀=0.43) were empirically adjusted to reproduce the published cohort-level mean 5-year survival of 78.4% reported in the original validation study.
 
+> 📄 **Detailed Documentation:** See [`docs/BASELINE_ESTIMATION.md`](docs/BASELINE_ESTIMATION.md) for complete methodological notes, mathematical derivations, and alternative estimation approaches.
+
 **Impact:** 
 - Individual predictions may deviate from the validated nomogram's performance
 - The C-index (discrimination) is likely preserved, but absolute probabilities require institutional recalibration
@@ -567,6 +569,14 @@ Run the end-to-end pipeline using the included TCGA cohort data:
 pip install -r requirements.txt
 
 # Execute full analytical workflow
+python risk_calculator.py --data data/tcga_2018_clinical_data.tsv
+```
+
+### Using Conda
+
+```bash
+conda env create -f environment.yml
+conda activate gastric-cancer-risk
 python risk_calculator.py --data data/tcga_2018_clinical_data.tsv
 ```
 

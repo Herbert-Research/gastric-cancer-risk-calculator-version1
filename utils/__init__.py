@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from utils.bootstrap import bootstrap_correlation, bootstrap_metric
 from utils.logging_config import get_logger, setup_logging
 from utils.visualization import (
     finalize_figure,
@@ -13,6 +14,8 @@ from utils.visualization import (
 )
 
 __all__ = [
+    "bootstrap_correlation",
+    "bootstrap_metric",
     "get_logger",
     "setup_logging",
     "finalize_figure",

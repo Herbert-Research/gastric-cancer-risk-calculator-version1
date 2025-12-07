@@ -304,13 +304,13 @@ def safe_float(value: Any) -> float:
     """Return a Python float from numpy/pandas scalar wrappers."""
 
     if isinstance(value, Number):
-        return float(value)  # type: ignore[reportArgumentType]
+        return float(value)  # type: ignore[arg-type]
 
     item = getattr(value, "item", None)
     if callable(item):
         inner = item()
         if isinstance(inner, Number):
-            return float(inner)  # type: ignore[reportArgumentType]
+            return float(inner)  # type: ignore[arg-type]
 
     return float(value)
 
@@ -450,17 +450,15 @@ def resolve_ln_ratio(
 
     if ln_ratio is not None:
         return float(ln_ratio)
-    if total_ln in (None, 0):
+    if total_ln is None or total_ln == 0:
         return None
-    positive_ln = positive_ln or 0.0
+    positive_ln = positive_ln if positive_ln is not None else 0.0
     if total_ln <= 0:
         return None
     return float(positive_ln) / float(total_ln)
 
 
-def score_patients(
-    model: GastricCancerRiskModel, patients: list[dict[str, Any]]
-) -> pd.DataFrame:
+def score_patients(model: GastricCancerRiskModel, patients: list[dict[str, Any]]) -> pd.DataFrame:
     """Return a dataframe with risk predictions for each patient input."""
 
     rows = []
@@ -838,7 +836,7 @@ def normalize_n_stage(value: Any) -> str | None:
     return stage if stage in N_STAGE_PRIOR_LN_RATIO else None
 
 
-def _normalize_stage(value, prefix):
+def _normalize_stage(value: Any, prefix: str) -> str | None:
     if pd.isna(value):
         return None
     cleaned = str(value).strip().upper()
@@ -944,7 +942,11 @@ def parse_event_status(value: Any) -> float | None:
 
 
 def analyze_tcga_cohort(
-    model, data_path: Path, output_dir: Path, show_plots: bool, survival_model=None
+    model: GastricCancerRiskModel,
+    data_path: Path,
+    output_dir: Path,
+    show_plots: bool,
+    survival_model: CoxModel | None = None,
 ) -> list[Path]:
     """
     Score the TCGA STAD cohort and generate validation analyses.
@@ -1081,9 +1083,14 @@ def analyze_tcga_cohort(
         cohort_results, output_dir, show_plots, label_column="event_observed"
     )
     if calibration_result:
-        calibration_fig, brier = calibration_result
+        calibration_fig, brier, brier_ci_low, brier_ci_high = calibration_result
         generated_paths.append(calibration_fig)
-        logger.info("Brier score (recurrence model vs. DFS): %.3f", brier)
+        logger.info(
+            "Brier score (recurrence model vs. DFS): %.3f (95%% CI: %.3f–%.3f)",
+            brier,
+            brier_ci_low,
+            brier_ci_high,
+        )
         logger.info("⚠️  Note: Poor calibration reflects outcome mismatch, not model failure.")
         logger.info("    The model predicts recurrence; TCGA provides disease-free survival.")
         logger.info("    These are related but distinct clinical endpoints.")
@@ -1100,10 +1107,10 @@ def analyze_tcga_cohort(
     return generated_paths
 
 
-def main():
+def main() -> None:
     args = parse_args()
 
-    logger = setup_logging(
+    main_logger = setup_logging(
         level=logging.DEBUG if args.verbose else logging.INFO,
         include_timestamp=args.log_timestamps,
     )
@@ -1113,13 +1120,13 @@ def main():
 
     reset_imputation_seed(42)
 
-    logger.info("Gastric Cancer Risk Calculator (Dual Model)")
-    logger.info("=" * 60)
-    logger.info("Data path: %s", args.data)
-    logger.info("Output directory: %s", args.output_dir)
+    main_logger.info("Gastric Cancer Risk Calculator (Dual Model)")
+    main_logger.info("=" * 60)
+    main_logger.info("Data path: %s", args.data)
+    main_logger.info("Output directory: %s", args.output_dir)
 
     model_config = load_model_config(args.model_config)
-    logger.info(
+    main_logger.info(
         "Recurrence model: %s – %s",
         model_config.get("id", "custom"),
         model_config.get("name", "N/A"),
@@ -1128,17 +1135,17 @@ def main():
 
     survival_model = None
     if args.skip_survival:
-        logger.info("Survival model: Skipped (flag provided)")
+        main_logger.info("Survival model: Skipped (flag provided)")
     else:
         survival_model = load_survival_model(args.survival_model)
         if survival_model:
-            logger.info("Survival model: Han 2012 D2 Gastrectomy Nomogram")
+            main_logger.info("Survival model: Han 2012 D2 Gastrectomy Nomogram")
         else:
-            logger.warning("Survival model: Not available (recurrence only)")
+            main_logger.warning("Survival model: Not available (recurrence only)")
 
     example_results = run_example_patients(recurrence_model, survival_model)
 
-    generated_files = []
+    generated_files: list[Path] = []
     generated_files.append(
         plot_individual_predictions(example_results, args.output_dir, args.show_plots)
     )
@@ -1152,10 +1159,10 @@ def main():
     if tcga_figs:
         generated_files.extend(tcga_figs)
 
-    logger.info("")
-    logger.info("Generated files:")
+    main_logger.info("")
+    main_logger.info("Generated files:")
     for path in generated_files:
-        logger.info("  - %s", path)
+        main_logger.info("  - %s", path)
 
 
 if __name__ == "__main__":

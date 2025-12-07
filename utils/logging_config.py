@@ -10,7 +10,11 @@ from pathlib import Path
 
 # Ensure UTF-8 capable streams on Windows consoles to avoid encoding errors.
 # Skip this when running under pytest to avoid interfering with test capture.
-if sys.platform == "win32" and "pytest" not in sys.modules and not os.environ.get("PYTEST_CURRENT_TEST"):
+if (
+    sys.platform == "win32"
+    and "pytest" not in sys.modules
+    and not os.environ.get("PYTEST_CURRENT_TEST")
+):
     try:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")

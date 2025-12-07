@@ -1,0 +1,4 @@
+# file: C:\Users\m4rti\Documents\GitHub\gastric-cancer-risk-calculator-version1\__init__.py
+# hypothesis_version: 6.148.7
+
+['CoxModel', 'DEFAULT_N_STAGE', 'DEFAULT_T_STAGE', 'T_STAGE_PRIOR_SIZE']

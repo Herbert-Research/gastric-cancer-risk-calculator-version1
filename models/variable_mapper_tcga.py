@@ -112,7 +112,7 @@ class Han2012VariableMapper:
         # Default to distribution-based sampling (seeded for reproducibility)
         locations = ["lower", "middle", "upper"]
         weights = [0.60, 0.25, 0.15]  # Epidemiological distribution
-        return _RNG.choice(locations, p=weights)
+        return str(_RNG.choice(locations, p=weights))
 
     @staticmethod
     def map_depth_of_invasion(t_stage: str | None) -> str:
@@ -307,12 +307,12 @@ def reset_imputation_seed(seed: int = 42) -> None:
     _RNG = np.random.default_rng(seed=seed)
 
 
-def test_mapper():
+def test_mapper() -> None:
     """Test the mapper with sample data."""
     logger.info("Testing Han 2012 Variable Mapper for TCGA Data")
     logger.info("=" * 60)
 
-    test_patient = {
+    test_patient: dict[str, Any] = {
         "age": 65,
         "Sex": "Female",
         "T_stage": "T3",

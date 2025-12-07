@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from models.cox_model import CoxModel
 
 
@@ -10,24 +11,15 @@ def mock_cox_config():
     return {
         "id": "test_model",
         "name": "Test Cox Model",
-        "baseline_survival": {
-            "5_year_estimate": 0.80,
-            "10_year_estimate": 0.70
-        },
+        "baseline_survival": {"5_year_estimate": 0.80, "10_year_estimate": 0.70},
         "variables": {
-            "age": {
-                "type": "continuous",
-                "coefficient": 0.05
-            },
+            "age": {"type": "continuous", "coefficient": 0.05},
             "sex": {
                 "type": "categorical",
                 "reference": "male",
-                "categories": {
-                    "male": 0.0,
-                    "female": -0.5
-                }
-            }
-        }
+                "categories": {"male": 0.0, "female": -0.5},
+            },
+        },
     }
 
 

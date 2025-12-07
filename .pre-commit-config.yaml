@@ -26,6 +26,4 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies:
-          - types-all
-        args: [--ignore-missing-imports]
+        additional_dependencies: [pandas-stubs, types-seaborn]

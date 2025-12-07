@@ -2,27 +2,27 @@
 
 from __future__ import annotations
 
-import tempfile
+import sys
 from pathlib import Path
+from unittest.mock import patch
 
-import pandas as pd
 import pytest
 
 from risk_calculator import (
     GastricCancerRiskModel,
+    estimate_ln_ratio,
+    estimate_tumor_size,
     load_model_config,
-    load_tcga_cohort,
-    predict_with_both_models,
     load_survival_model,
+    load_tcga_cohort,
+    normalize_n_stage,
+    normalize_t_stage,
+    parse_event_status,
+    predict_with_both_models,
+    resolve_ln_ratio,
+    safe_float,
     score_patients,
     sigmoid,
-    resolve_ln_ratio,
-    normalize_t_stage,
-    normalize_n_stage,
-    estimate_tumor_size,
-    estimate_ln_ratio,
-    parse_event_status,
-    safe_float,
 )
 
 
@@ -289,7 +289,7 @@ class TestScorePatients:
         """Test scoring a single patient."""
         patients = [{"T_stage": "T2", "N_stage": "N1", "age": 60, "name": "Test Patient"}]
         results = score_patients(model, patients)
-        
+
         assert len(results) == 1
         assert "Risk" in results.columns
         assert "Category" in results.columns
@@ -302,7 +302,7 @@ class TestScorePatients:
             {"T_stage": "T3", "N_stage": "N2", "name": "Advanced"},
         ]
         results = score_patients(model, patients)
-        
+
         assert len(results) == 2
         assert results.iloc[0]["Risk"] < results.iloc[1]["Risk"]
 
@@ -315,7 +315,7 @@ class TestTCGACohort:
         data_path = Path("data/tcga_2018_clinical_data.tsv")
         if not data_path.exists():
             pytest.skip("TCGA data file not available")
-        
+
         cohort = load_tcga_cohort(data_path)
         assert not cohort.empty
         assert "T_stage" in cohort.columns
@@ -328,7 +328,7 @@ class TestTCGACohort:
         data_path = Path("data/tcga_2018_clinical_data.tsv")
         if not data_path.exists():
             pytest.skip("TCGA data file not available")
-        
+
         cohort = load_tcga_cohort(data_path)
         required = ["T_stage", "N_stage", "age", "tumor_size_cm", "ln_ratio"]
         for col in required:
@@ -348,7 +348,7 @@ class TestSurvivalModel:
         model = load_survival_model()
         if model is None:
             pytest.skip("Survival model components not available")
-        
+
         assert model.name is not None
         assert model.baseline_5yr is not None
 
@@ -381,7 +381,7 @@ class TestDualModelScoring:
         assert len(results) == 2
         assert "Risk" in results.columns
         assert all(0 <= r <= 1 for r in results["Risk"])
-        
+
         # Check survival columns if model available
         if survival_model is not None:
             assert "survival_5yr" in results.columns
@@ -488,3 +488,400 @@ class TestEndToEndPipeline:
         results = score_patients(model, sample_patients)
         assert len(results) == 10
         assert all(results["Risk"].notna())
+
+
+class TestMainFunction:
+    """End-to-end tests for the main CLI entrypoint."""
+
+    def test_main_with_default_args(self, tmp_path):
+        """Test main() executes without error using default data."""
+        from risk_calculator import main
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+        ]
+        with patch.object(sys, "argv", test_args):
+            # Should not raise
+            main()
+
+        # Verify key outputs created
+        assert (tmp_path / "risk_predictions.png").exists()
+        assert (tmp_path / "sensitivity_analysis.png").exists()
+
+    def test_main_skip_survival(self, tmp_path):
+        """Test main() with --skip-survival flag."""
+        from risk_calculator import main
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+            "--skip-survival",
+        ]
+        with patch.object(sys, "argv", test_args):
+            main()
+
+        # Risk predictions should exist
+        assert (tmp_path / "risk_predictions.png").exists()
+        # Survival plot should NOT exist when skipped
+        assert not (tmp_path / "survival_predictions_han2012.png").exists()
+
+    def test_main_verbose_logging(self, tmp_path, caplog):
+        """Test verbose flag enables DEBUG logging."""
+        import logging
+
+        from risk_calculator import main
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+            "--verbose",
+        ]
+        with patch.object(sys, "argv", test_args):
+            with caplog.at_level(logging.DEBUG):
+                main()
+
+        # Verbose mode should have been used (check log level was set)
+        assert (tmp_path / "risk_predictions.png").exists()
+
+    def test_main_with_log_timestamps(self, tmp_path):
+        """Test main() with --log-timestamps flag."""
+        from risk_calculator import main
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+            "--log-timestamps",
+        ]
+        with patch.object(sys, "argv", test_args):
+            main()
+
+        assert (tmp_path / "risk_predictions.png").exists()
+
+    def test_main_custom_model_config(self, tmp_path):
+        """Test main() with custom model config path."""
+        import json
+
+        from risk_calculator import main
+
+        # Create custom config
+        custom_config = {
+            "id": "test_model",
+            "name": "Test Model",
+            "intercept": -2.0,
+            "t_stage_weights": {"T1": 0.0, "T2": 0.5, "T3": 1.0, "T4": 1.5},
+            "n_stage_weights": {"N0": 0.0, "N1": 0.5, "N2": 1.0, "N3": 1.5},
+            "risk_floor": 0.01,
+            "risk_ceiling": 0.99,
+        }
+        config_path = tmp_path / "custom_config.json"
+        config_path.write_text(json.dumps(custom_config))
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+            "--model-config",
+            str(config_path),
+            "--skip-survival",
+        ]
+        with patch.object(sys, "argv", test_args):
+            main()
+
+        assert (tmp_path / "risk_predictions.png").exists()
+
+
+class TestErrorHandling:
+    """Test graceful error handling for edge cases."""
+
+    def test_load_tcga_cohort_missing_file(self):
+        """Test load_tcga_cohort with non-existent file."""
+        result = load_tcga_cohort(Path("/nonexistent/path/to/data.tsv"))
+        assert result.empty
+
+    def test_load_tcga_cohort_malformed_tsv(self, tmp_path):
+        """Test behavior when TSV is malformed or missing required columns."""
+        bad_tsv = tmp_path / "bad_data.tsv"
+        # Create a file that's valid but missing expected columns
+        bad_tsv.write_text("column_a\tcolumn_b\n1\t2\n3\t4\n")
+
+        # The function should either return empty or raise - test that it doesn't crash
+        # unexpectedly. With missing required columns like 'age', it may raise KeyError
+        import pandas as pd
+
+        try:
+            result = load_tcga_cohort(bad_tsv)
+            # If it returns, should be a DataFrame
+            assert isinstance(result, pd.DataFrame)
+        except KeyError:
+            # KeyError is acceptable for missing required columns
+            pass
+
+    def test_load_model_config_missing_file(self):
+        """Test fallback when config file is missing."""
+        config = load_model_config(Path("/nonexistent/path.json"))
+        # Should fall back to default
+        assert config is not None
+        assert "id" in config
+        assert config["id"] == "heuristic_klass_v1"
+
+    def test_load_model_config_invalid_json(self, tmp_path):
+        """Test fallback when JSON is malformed."""
+        bad_json = tmp_path / "bad_config.json"
+        bad_json.write_text("{invalid json content")
+
+        config = load_model_config(bad_json)
+        # Should fall back to default
+        assert config is not None
+        assert "id" in config
+
+    def test_load_survival_model_missing_file(self):
+        """Test handling of missing survival model file."""
+        model = load_survival_model(Path("/nonexistent/model.json"))
+        assert model is None
+
+    def test_model_with_missing_coefficients(self):
+        """Test model handles missing coefficient keys gracefully."""
+        minimal_config = {
+            "id": "minimal",
+            "t_stage_weights": {"T1": 0.0, "T2": 0.5, "T3": 1.0, "T4": 1.5},
+            "n_stage_weights": {"N0": 0.0, "N1": 0.5, "N2": 1.0, "N3": 1.5},
+        }
+        model = GastricCancerRiskModel(minimal_config)
+        patient = {"T_stage": "T2", "N_stage": "N1"}
+        risk = model.calculate_risk(patient)
+        assert 0.0 <= risk <= 1.0
+
+    def test_safe_float_with_none(self):
+        """Test safe_float handles edge cases."""
+        # Test with valid inputs
+        assert safe_float(3.14) == 3.14
+        assert safe_float(42) == 42.0
+
+        import numpy as np
+
+        assert safe_float(np.float64(3.14)) == pytest.approx(3.14)
+
+
+class TestSensitivityAnalysis:
+    """Test lymph node yield sensitivity analysis."""
+
+    def test_sensitivity_analysis_output_created(self, tmp_path):
+        """Verify sensitivity analysis produces output file."""
+        from risk_calculator import run_sensitivity_analysis
+
+        model = GastricCancerRiskModel(load_model_config())
+        output_path = run_sensitivity_analysis(model, tmp_path, show_plots=False)
+
+        assert output_path.exists()
+        assert output_path.name == "sensitivity_analysis.png"
+
+    def test_sensitivity_analysis_decreasing_risk(self, tmp_path):
+        """Higher LN yield should reduce estimated risk (lower ratio)."""
+        model = GastricCancerRiskModel(load_model_config())
+
+        # Manually calculate risks at different yields
+        test_patient_low = {
+            "T_stage": "T2",
+            "N_stage": "N1",
+            "age": 60,
+            "tumor_size_cm": 3.0,
+            "positive_LN": 3,
+            "total_LN": 10,  # Low yield -> higher ratio
+        }
+        test_patient_high = {
+            "T_stage": "T2",
+            "N_stage": "N1",
+            "age": 60,
+            "tumor_size_cm": 3.0,
+            "positive_LN": 3,
+            "total_LN": 40,  # High yield -> lower ratio
+        }
+
+        risk_low_yield = model.calculate_risk(test_patient_low)
+        risk_high_yield = model.calculate_risk(test_patient_high)
+
+        # Higher yield should result in lower estimated risk
+        assert risk_high_yield < risk_low_yield
+
+    def test_sensitivity_analysis_with_edge_yields(self, tmp_path):
+        """Test sensitivity analysis handles edge case yields."""
+        model = GastricCancerRiskModel(load_model_config())
+
+        # Minimum viable yield
+        patient_min = {
+            "T_stage": "T2",
+            "N_stage": "N1",
+            "positive_LN": 1,
+            "total_LN": 1,
+        }
+        risk_min = model.calculate_risk(patient_min)
+        assert model.risk_floor <= risk_min <= model.risk_ceiling
+
+        # Very high yield
+        patient_max = {
+            "T_stage": "T2",
+            "N_stage": "N1",
+            "positive_LN": 1,
+            "total_LN": 100,
+        }
+        risk_max = model.calculate_risk(patient_max)
+        assert model.risk_floor <= risk_max <= model.risk_ceiling
+
+
+class TestRunExamplePatients:
+    """Test the example patient scenarios."""
+
+    def test_run_example_patients_returns_dataframe(self):
+        """Test that example patients function returns valid DataFrame."""
+        from risk_calculator import run_example_patients
+
+        model = GastricCancerRiskModel(load_model_config())
+        survival_model = load_survival_model()
+
+        results = run_example_patients(model, survival_model)
+
+        import pandas as pd
+
+        assert isinstance(results, pd.DataFrame)
+        assert len(results) == 4  # Four example patients
+        assert "Risk" in results.columns
+        assert "Category" in results.columns
+
+    def test_example_patients_risk_ordering(self):
+        """Test that example patients have expected risk ordering."""
+        from risk_calculator import run_example_patients
+
+        model = GastricCancerRiskModel(load_model_config())
+        results = run_example_patients(model, survival_model=None)
+
+        # Patient A (early) should have lowest risk, Patient D (very advanced) highest
+        risks = results["Risk"].tolist()
+        assert risks[0] < risks[1] < risks[2] < risks[3]
+
+    def test_example_patients_without_survival_model(self):
+        """Test example patients work without survival model."""
+        from risk_calculator import run_example_patients
+
+        model = GastricCancerRiskModel(load_model_config())
+        results = run_example_patients(model, survival_model=None)
+
+        assert len(results) == 4
+        assert "Risk" in results.columns
+        # Survival columns should not be present
+        assert "survival_5yr" not in results.columns or results["survival_5yr"].isna().all()
+
+
+class TestParseArgs:
+    """Test command-line argument parsing."""
+
+    def test_parse_args_defaults(self):
+        """Test default argument values."""
+        from risk_calculator import parse_args
+
+        with patch.object(sys, "argv", ["risk_calculator.py"]):
+            args = parse_args()
+
+        assert args.data == Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"
+        assert not args.show_plots
+        assert not args.skip_survival
+        assert not args.verbose
+        assert not args.log_timestamps
+
+    def test_parse_args_custom_values(self, tmp_path):
+        """Test parsing custom argument values."""
+        from risk_calculator import parse_args
+
+        test_args = [
+            "risk_calculator.py",
+            "--data",
+            str(tmp_path / "custom_data.tsv"),
+            "--output-dir",
+            str(tmp_path),
+            "--show-plots",
+            "--skip-survival",
+            "--verbose",
+            "--log-timestamps",
+        ]
+        with patch.object(sys, "argv", test_args):
+            args = parse_args()
+
+        assert args.data == tmp_path / "custom_data.tsv"
+        assert args.output_dir == tmp_path
+        assert args.show_plots
+        assert args.skip_survival
+        assert args.verbose
+        assert args.log_timestamps
+
+
+class TestVisualizationIntegration:
+    """Integration tests for visualization functions."""
+
+    def test_plot_individual_predictions(self, tmp_path):
+        """Test plotting individual predictions."""
+        from risk_calculator import run_example_patients
+
+        from utils.visualization import plot_individual_predictions
+
+        model = GastricCancerRiskModel(load_model_config())
+        results = run_example_patients(model, survival_model=None)
+
+        output_path = plot_individual_predictions(results, tmp_path, show_plots=False)
+        assert output_path.exists()
+
+    def test_plot_tcga_summary(self, tmp_path):
+        """Test plotting TCGA cohort summary."""
+        import pandas as pd
+
+        from utils.visualization import plot_tcga_summary
+
+        # Create mock cohort results
+        mock_results = pd.DataFrame(
+            {
+                "Risk": [0.2, 0.4, 0.6, 0.8],
+                "Category": ["Low Risk", "Moderate Risk", "High Risk", "Very High Risk"],
+                "T_stage": ["T1", "T2", "T3", "T4"],
+                "N_stage": ["N0", "N1", "N2", "N3"],
+            }
+        )
+
+        output_path = plot_tcga_summary(mock_results, tmp_path, show_plots=False)
+        assert output_path.exists()
+
+    def test_plot_calibration_curve_with_events(self, tmp_path):
+        """Test calibration curve plotting with event data."""
+        import pandas as pd
+
+        from utils.visualization import plot_calibration_curve
+
+        # Create mock data with event labels
+        mock_results = pd.DataFrame(
+            {
+                "Risk": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95],
+                "event_observed": [0, 0, 0, 1, 0, 1, 1, 1, 1, 1],
+            }
+        )
+
+        result = plot_calibration_curve(
+            mock_results, tmp_path, show_plots=False, label_column="event_observed"
+        )
+        # Should return tuple of (path, brier_score, ci_low, ci_high) or None
+        if result is not None:
+            output_path, brier, ci_low, ci_high = result
+            assert output_path.exists()
+            assert 0 <= brier <= 1
+            assert ci_low <= brier <= ci_high
