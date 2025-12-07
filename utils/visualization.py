@@ -283,7 +283,6 @@ def plot_calibration_curve(
         return None
 
     from utils.bootstrap import bootstrap_metric
-    import numpy as np
 
     y_true = valid[label_column].astype(float).to_numpy()
     y_pred = valid["Risk"].astype(float).to_numpy()
