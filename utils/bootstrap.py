@@ -10,7 +10,7 @@ Purpose: Statistical rigor for PhD portfolio validation
 
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Callable
 
 import numpy as np
 
@@ -22,7 +22,7 @@ def bootstrap_metric(
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     random_state: int = 42,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Compute bootstrap confidence interval for a prediction metric.
 
@@ -73,8 +73,7 @@ def bootstrap_metric(
 
     if len(y_true) != len(y_pred):
         raise ValueError(
-            f"y_true and y_pred must have the same length. "
-            f"Got {len(y_true)} and {len(y_pred)}."
+            f"y_true and y_pred must have the same length. " f"Got {len(y_true)} and {len(y_pred)}."
         )
 
     if len(y_true) == 0:
@@ -121,7 +120,7 @@ def bootstrap_correlation(
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     random_state: int = 42,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Compute bootstrap confidence interval for Pearson correlation.
 
