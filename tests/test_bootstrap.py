@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from sklearn.metrics import brier_score_loss, accuracy_score
+from sklearn.metrics import accuracy_score, brier_score_loss
 
-from utils.bootstrap import bootstrap_metric, bootstrap_correlation
+from utils.bootstrap import bootstrap_correlation, bootstrap_metric
 
 
 class TestBootstrapMetric:
