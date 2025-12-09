@@ -47,5 +47,8 @@ eggs/
 # Matplotlib cache
 .matplotlib/
 
+# Hypothesis testing cache
+.hypothesis/
+
 # TCGA clinical data (licensed, not hosted in repository)
 data/tcga_2018_clinical_data.tsv
