@@ -38,7 +38,7 @@ This report follows the Transparent Reporting of a multivariable prediction mode
 - Mean 5-year survival prediction: ~80% (Han 2012) with prognosis categories balanced (~33% Excellent, ~56% Good/Moderate).
 - Recurrence model Brier score vs. disease-free status: 0.502 (demonstrates endpoint mismatch; not interpretable as calibration due to 100% imputation).
 - High-risk distribution: median recurrence risk 86.6%; 77% classified Very High Risk (reflects advanced cohort).
-- Correlation (recurrence vs. survival): r ≈ -0.46 (moderate inverse relationship).
+- Correlation (recurrence vs. survival): r ≈ -0.456 (moderate inverse relationship).
 
 **Limitations:**
 - 100% variable imputation (tumor location, size, positive/total LN counts) from stage priors; precludes external calibration validity.
