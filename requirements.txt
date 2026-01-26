@@ -6,3 +6,5 @@ matplotlib==3.9.2
 seaborn==0.13.2
 scikit-learn==1.5.2
 hypothesis==6.115.6
+pytest>=8.0.0
+pytest-cov>=4.1.0

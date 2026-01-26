@@ -61,7 +61,7 @@ docker run -v ${PWD}/outputs:/app/outputs gastric-risk
 ### Python Version Requirements
 
 - **Minimum**: Python 3.9
-- **Tested on**: Python 3.9, 3.10, 3.11, 3.12
+- **Tested on**: Python 3.9, 3.10, 3.11
 - **CI Matrix**: See `.github/workflows/ci.yml` for the full test matrix
 
 ---
@@ -171,8 +171,11 @@ All stochastic operations use fixed seeds for reproducibility:
 ### Run Full Test Suite
 
 ```bash
+pip install -r requirements.txt
 pytest tests/ -v --tb=short
 ```
+
+Note: All test dependencies (including pytest) are included in requirements.txt.
 
 **Expected Result:** `190 passed` (may vary slightly with test additions)
 
