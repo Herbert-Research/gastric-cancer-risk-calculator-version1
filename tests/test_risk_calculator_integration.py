@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 from unittest.mock import patch
@@ -46,12 +47,13 @@ class TestSigmoidFunction:
     def test_sigmoid_large_negative_no_overflow(self):
         """Test sigmoid handles large negative values without overflow."""
         result = sigmoid(-710)
-        assert result == 0.0 or result > 0.0  # Should not raise
+        assert 0.0 <= result <= 1.0, f"Risk score {result} out of valid range [0, 1]"
+        assert math.isfinite(result), f"Risk score {result} is not finite"
 
     def test_sigmoid_large_positive(self):
         """Test sigmoid handles large positive values."""
         result = sigmoid(710)
-        assert result < 1.0 or result == 1.0  # Should not raise
+        assert 0.0 <= result <= 1.0, f"Risk score {result} out of valid range [0, 1]"
 
 
 class TestSafeFloat:
