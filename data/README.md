@@ -9,5 +9,3 @@ Due to licensing and size constraints, the raw clinical data is not hosted direc
    * Click "Download"
    * Select "Clinical Data"
    * Rename the clinical data file to `tcga_2018_clinical_data.tsv` and place it in this directory.
-
-*Note: A sample file is included in this directory for demonstration purposes.*

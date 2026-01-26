@@ -558,11 +558,22 @@ The framework automatically generates high-resolution audits for research review
   - `sensitivity_analysis.png` – Visualization of how surgical quality (LN yield) impacts algorithmic risk scoring.
   - `tcga_cohort_summary.png` – Heatmap of median risk stratified by TN stage, validating alignment with AJCC standards.
 
+## Data Availability
+
+The TCGA clinical dataset is **not included** in this repository due to data redistribution restrictions.
+
+**To reproduce:**
+1. Download the TCGA PanCanAtlas stomach adenocarcinoma (STAD) clinical data from [cBioPortal](https://www.cbioportal.org/).
+2. Place the file at `data/tcga_2018_clinical_data.tsv`.
+3. Verify file integrity using the SHA256 checksum in `REPRODUCIBILITY.md`.
+
+See `REPRODUCIBILITY.md` for detailed data provenance and verification steps.
+
 ## Usage
 
 ### Quickstart (Headless)
 
-Run the end-to-end pipeline using the included TCGA cohort data:
+Run the end-to-end pipeline using the TCGA cohort data (not included in this repository):
 
 ```bash
 # Setup environment

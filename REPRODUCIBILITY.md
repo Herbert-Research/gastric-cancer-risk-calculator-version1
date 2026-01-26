@@ -72,6 +72,9 @@ Before running any analysis, verify that the input data file has not been corrup
 
 ### SHA256 Checksum Verification
 
+The SHA256 checksum below is for the TCGA dataset downloaded independently from [cBioPortal](https://www.cbioportal.org/).
+This file is not distributed with this repository.
+
 ```bash
 # On Linux/macOS:
 sha256sum data/tcga_2018_clinical_data.tsv
