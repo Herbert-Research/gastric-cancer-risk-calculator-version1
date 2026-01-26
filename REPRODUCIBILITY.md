@@ -177,6 +177,19 @@ pytest tests/ -v --tb=short
 
 Note: All test dependencies (including pytest) are included in requirements.txt.
 
+### CI Test Coverage Note
+
+In CI environments where the full TCGA dataset is not available, integration tests
+use a synthetic fixture (`tests/fixtures/dummy_data.tsv`) containing 5 representative
+patient records. This allows CI to validate:
+
+- Data ingestion and parsing logic
+- Feature engineering pipeline
+- Risk score computation
+- Output formatting
+
+**For full validation metrics**, run tests locally with the complete TCGA dataset.
+
 **Expected Result:** `190 passed` (may vary slightly with test additions)
 
 ### Run with Coverage Report

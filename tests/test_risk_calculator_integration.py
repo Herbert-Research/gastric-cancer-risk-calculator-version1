@@ -26,6 +26,18 @@ from risk_calculator import (
     sigmoid,
 )
 
+TCGA_DATA_PATH = Path("data/tcga_2018_clinical_data.tsv")
+FIXTURE_PATH = Path("tests/fixtures/dummy_data.tsv")
+
+
+def get_tcga_or_fixture_path() -> tuple[Path, bool]:
+    """Return TCGA data path if available, otherwise the synthetic fixture."""
+    if TCGA_DATA_PATH.exists():
+        return TCGA_DATA_PATH, False
+    if FIXTURE_PATH.exists():
+        return FIXTURE_PATH, True
+    pytest.skip("TCGA data file and fixture not available")
+
 
 class TestSigmoidFunction:
     """Test the numerically stable sigmoid implementation."""
@@ -314,23 +326,20 @@ class TestTCGACohort:
 
     def test_tcga_cohort_loads_successfully(self):
         """Test that TCGA cohort can be loaded."""
-        data_path = Path("data/tcga_2018_clinical_data.tsv")
-        if not data_path.exists():
-            pytest.skip("TCGA data file not available")
-
+        data_path, is_fixture = get_tcga_or_fixture_path()
         cohort = load_tcga_cohort(data_path)
         assert not cohort.empty
         assert "T_stage" in cohort.columns
         assert "N_stage" in cohort.columns
         assert "age" in cohort.columns
-        assert len(cohort) > 400  # TCGA STAD has ~436 patients
+        if is_fixture:
+            assert len(cohort) >= 5
+        else:
+            assert len(cohort) > 400  # TCGA STAD has ~436 patients
 
     def test_tcga_cohort_has_required_columns(self):
         """Test that loaded cohort has all required columns."""
-        data_path = Path("data/tcga_2018_clinical_data.tsv")
-        if not data_path.exists():
-            pytest.skip("TCGA data file not available")
-
+        data_path, _ = get_tcga_or_fixture_path()
         cohort = load_tcga_cohort(data_path)
         required = ["T_stage", "N_stage", "age", "tumor_size_cm", "ln_ratio"]
         for col in required:
@@ -461,9 +470,7 @@ class TestEndToEndPipeline:
 
     def test_tcga_cohort_pipeline(self):
         """Test processing the full TCGA cohort."""
-        data_path = Path("data/tcga_2018_clinical_data.tsv")
-        if not data_path.exists():
-            pytest.skip("TCGA data file not available")
+        data_path, is_fixture = get_tcga_or_fixture_path()
 
         # Load data
         cohort = load_tcga_cohort(data_path)
@@ -475,7 +482,8 @@ class TestEndToEndPipeline:
 
         # Score a subset for speed
         sample_patients = []
-        for _, row in cohort.head(10).iterrows():
+        sample_size = 5 if is_fixture else 10
+        for _, row in cohort.head(sample_size).iterrows():
             sample_patients.append(
                 {
                     "name": row.get("patient_id", "Unknown"),
@@ -488,7 +496,7 @@ class TestEndToEndPipeline:
             )
 
         results = score_patients(model, sample_patients)
-        assert len(results) == 10
+        assert len(results) == sample_size
         assert all(results["Risk"].notna())
 
 
@@ -499,10 +507,11 @@ class TestMainFunction:
         """Test main() executes without error using default data."""
         from risk_calculator import main
 
+        data_path, _ = get_tcga_or_fixture_path()
         test_args = [
             "risk_calculator.py",
             "--data",
-            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            str(data_path),
             "--output-dir",
             str(tmp_path),
         ]
@@ -518,10 +527,11 @@ class TestMainFunction:
         """Test main() with --skip-survival flag."""
         from risk_calculator import main
 
+        data_path, _ = get_tcga_or_fixture_path()
         test_args = [
             "risk_calculator.py",
             "--data",
-            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            str(data_path),
             "--output-dir",
             str(tmp_path),
             "--skip-survival",
@@ -540,10 +550,11 @@ class TestMainFunction:
 
         from risk_calculator import main
 
+        data_path, _ = get_tcga_or_fixture_path()
         test_args = [
             "risk_calculator.py",
             "--data",
-            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            str(data_path),
             "--output-dir",
             str(tmp_path),
             "--verbose",
@@ -559,10 +570,11 @@ class TestMainFunction:
         """Test main() with --log-timestamps flag."""
         from risk_calculator import main
 
+        data_path, _ = get_tcga_or_fixture_path()
         test_args = [
             "risk_calculator.py",
             "--data",
-            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            str(data_path),
             "--output-dir",
             str(tmp_path),
             "--log-timestamps",
@@ -591,10 +603,11 @@ class TestMainFunction:
         config_path = tmp_path / "custom_config.json"
         config_path.write_text(json.dumps(custom_config))
 
+        data_path, _ = get_tcga_or_fixture_path()
         test_args = [
             "risk_calculator.py",
             "--data",
-            str(Path(__file__).parent.parent / "data" / "tcga_2018_clinical_data.tsv"),
+            str(data_path),
             "--output-dir",
             str(tmp_path),
             "--model-config",
