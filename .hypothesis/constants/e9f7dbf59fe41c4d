@@ -1,4 +1,0 @@
-# file: C:\Users\m4rti\Documents\GitHub\gastric-cancer-risk-calculator-version1\models\cox_model.py
-# hypothesis_version: 6.148.7
-
-[0.0, 0.3, 0.5, 0.55, 0.65, 0.7, 0.85, 1.0, '10_year_estimate', '5_year_estimate', 'Cox Survival Model', 'Excellent Prognosis', 'Good Prognosis', 'Moderate Prognosis', 'Poor Prognosis', 'Very Poor Prognosis', 'baseline_survival', 'categorical', 'categories', 'coefficient', 'continuous', 'cox_model', 'id', 'name', 'timepoints', 'type', 'variables']

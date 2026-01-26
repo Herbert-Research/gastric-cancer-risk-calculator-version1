@@ -1,4 +1,0 @@
-# file: C:\Users\m4rti\Documents\GitHub\gastric-cancer-risk-calculator-version1\utils\__init__.py
-# hypothesis_version: 6.148.7
-
-['bootstrap_metric', 'finalize_figure', 'get_logger', 'plot_tcga_summary', 'setup_logging']

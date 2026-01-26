@@ -1,4 +1,0 @@
-# file: C:\Users\m4rti\Documents\GitHub\gastric-cancer-risk-calculator-version1\models\variable_mapper_tcga.py
-# hypothesis_version: 6.148.7
-
-[0.15, 0.25, 0.6, '  %s: %s', '0', '1-2', '3-6', '40-49', '50-59', '60-69', '7-15', '< 40', '=', '>= 16', '>= 70', 'C16.0', 'C16.1', 'C16.2', 'C16.3', 'C16.4', 'C16.5', 'C16.6', 'Female', 'Imputation Flags:', 'N0', 'N1', 'N2', 'N3', 'N_stage', 'Sex', 'T1', 'T1a', 'T1b', 'T2', 'T3', 'T4', 'T4a', 'T4b', 'T_stage', '__main__', 'age', 'age_available', 'depth_of_invasion', 'examined_ln_imputed', 'examined_lymph_nodes', 'f', 'female', 'icd_10', 'location', 'location_imputed', 'lower', 'male', 'middle', 'mucosa', 'positive_LN', 'positive_ln_imputed', 'proper_muscle', 'serosa', 'sex', 'sex_available', 'submucosa', 'subserosa', 'total_LN', 'upper']

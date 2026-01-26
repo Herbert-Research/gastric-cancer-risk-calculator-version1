@@ -50,5 +50,9 @@ eggs/
 # Hypothesis testing cache
 .hypothesis/
 
+# Generated images (keep only curated ones in docs/images/)
+*.png
+!docs/images/*.png
+
 # TCGA clinical data (licensed, not hosted in repository)
 data/tcga_2018_clinical_data.tsv
