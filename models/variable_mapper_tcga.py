@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from utils.logging_config import get_logger, setup_logging
+from utils.logging_config import get_logger
 
 # Reproducible imputation RNG (seeded for deterministic sampling)
 _RNG = np.random.default_rng(seed=42)
@@ -307,43 +307,3 @@ def reset_imputation_seed(seed: int = 42) -> None:
     _RNG = np.random.default_rng(seed=seed)
 
 
-def test_mapper() -> None:
-    """Test the mapper with sample data."""
-    logger.info("Testing Han 2012 Variable Mapper for TCGA Data")
-    logger.info("=" * 60)
-
-    test_patient: dict[str, Any] = {
-        "age": 65,
-        "Sex": "Female",
-        "T_stage": "T3",
-        "N_stage": "N2",
-        "positive_LN": None,  # Not available in TCGA
-        "total_LN": None,  # Not available in TCGA
-    }
-
-    mapper = Han2012VariableMapper()
-    han_patient = mapper.map_patient_from_dict(test_patient)
-    imputation_flags = mapper.get_imputation_flags(test_patient)
-
-    logger.info("")
-    logger.info("Original Patient Data:")
-    for key, value in test_patient.items():
-        logger.info("  %s: %s", key, value)
-
-    logger.info("")
-    logger.info("Mapped to Han 2012 Format:")
-    for key, value in han_patient.items():
-        logger.info("  %s: %s", key, value)
-
-    logger.info("")
-    logger.info("Imputation Flags:")
-    for key, value in imputation_flags.items():
-        logger.info("  %s: %s", key, value)
-
-    logger.info("")
-    logger.info("=" * 60)
-
-
-if __name__ == "__main__":
-    setup_logging()
-    test_mapper()
