@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
-from sklearn.metrics import brier_score_loss
 
 # Ensure repository root is on sys.path for direct imports when running via pytest.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -24,31 +24,37 @@ from risk_calculator import (  # noqa: E402
     GastricCancerRiskModel,
     load_model_config,
 )
+from utils.visualization import plot_calibration_curve  # noqa: E402
 
 
-class TestBrierScore:
-    """Tests for calibration metric calculations."""
+class TestCalibrationDiagnostics:
+    """Tests for calibration metric calculations using project code."""
 
-    def test_brier_score_perfect_predictions(self):
-        """Brier score should be 0 for perfect predictions."""
-        y_true = np.array([0, 0, 1, 1])
-        y_pred = np.array([0.0, 0.0, 1.0, 1.0])
-        score = brier_score_loss(y_true, y_pred)
-        assert score == 0.0
+    def test_calibration_brier_score_output(self, tmp_path):
+        """Calibration pipeline returns valid Brier score outputs."""
+        cohort_results = pd.DataFrame(
+            {
+                "Risk": [0.1, 0.9, 0.8, 0.2, 0.4, 0.6],
+                "Disease Free Status": [0, 1, 1, 0, 0, 1],
+            }
+        )
 
-    def test_brier_score_random_predictions(self):
-        """Brier score should be ~0.25 for constant 0.5 predictions."""
-        y_true = np.array([0, 0, 1, 1])
-        y_pred = np.array([0.5, 0.5, 0.5, 0.5])
-        score = brier_score_loss(y_true, y_pred)
-        assert 0.24 <= score <= 0.26
+        result = plot_calibration_curve(
+            cohort_results,
+            output_dir=tmp_path,
+            show_plots=False,
+            label_column="Disease Free Status",
+            n_bootstrap=200,
+        )
 
-    def test_brier_score_bounds(self):
-        """Brier score must be between 0 and 1."""
-        y_true = np.array([0, 1, 0, 1, 0])
-        y_pred = np.array([0.3, 0.7, 0.2, 0.8, 0.1])
-        score = brier_score_loss(y_true, y_pred)
-        assert 0.0 <= score <= 1.0
+        assert result is not None
+        figure_path, brier_score, ci_lower, ci_upper = result
+
+        assert figure_path.exists()
+        assert 0.0 <= brier_score <= 1.0
+        assert 0.0 <= ci_lower <= 1.0
+        assert 0.0 <= ci_upper <= 1.0
+        assert ci_lower <= ci_upper
 
 
 class TestRiskModelFunctionality:
