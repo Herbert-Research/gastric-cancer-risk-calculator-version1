@@ -1,3 +1,5 @@
+"""Publication-quality visualizations for risk and survival predictions."""
+
 from __future__ import annotations
 
 from pathlib import Path

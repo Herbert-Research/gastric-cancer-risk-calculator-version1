@@ -619,7 +619,7 @@ with col1:
     st.markdown(
         """
     **📖 Documentation**
-    [View on GitHub](https://github.com/your-username/gastric-cancer-risk-calculator)
+    [View on GitHub](https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1)
     """
     )
 

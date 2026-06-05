@@ -12,8 +12,8 @@ are welcome.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Herbert-Research/gastric-cancer-risk-calculator.git
-   cd gastric-cancer-risk-calculator
+   git clone https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1.git
+   cd gastric-cancer-risk-calculator-version1
    ```
 
 2. Create a virtual environment:

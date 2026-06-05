@@ -8,8 +8,8 @@ authors:
     given-names: Maximilian Herbert
     orcid: https://orcid.org/0009-0004-8776-2450
 license: MIT
-repository-code: https://github.com/Herbert-Research/gastric-cancer-risk-calculator
-url: https://github.com/Herbert-Research/gastric-cancer-risk-calculator
+repository-code: https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1
+url: https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1
 keywords:
   - gastric cancer
   - risk stratification
@@ -24,4 +24,4 @@ preferred-citation:
   title: Gastric Cancer Risk Stratification and Survival Modeling
   year: 2025
   version: 0.1.1
-  url: https://github.com/Herbert-Research/gastric-cancer-risk-calculator
+  url: https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1

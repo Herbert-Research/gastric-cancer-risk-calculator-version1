@@ -114,6 +114,57 @@ def bootstrap_metric(
     return point_estimate, ci_lower, ci_upper
 
 
+def concordance_index(
+    event_observed: np.ndarray,
+    predicted_risk: np.ndarray,
+) -> float:
+    """
+    Compute Harrell's concordance index (C-index) for binary outcomes.
+
+    For each concordant pair (one event, one non-event), checks whether the
+    predicted risk is higher for the patient who experienced the event.
+
+    Parameters
+    ----------
+    event_observed : np.ndarray
+        Binary event labels (0 = no event, 1 = event).
+    predicted_risk : np.ndarray
+        Predicted risk scores (higher = worse prognosis).
+
+    Returns
+    -------
+    float
+        C-index in [0, 1]. 0.5 = random, 1.0 = perfect discrimination.
+    """
+    event_observed = np.asarray(event_observed, dtype=float)
+    predicted_risk = np.asarray(predicted_risk, dtype=float)
+
+    valid = ~(np.isnan(event_observed) | np.isnan(predicted_risk))
+    event_observed = event_observed[valid]
+    predicted_risk = predicted_risk[valid]
+
+    concordant = 0
+    discordant = 0
+    tied = 0
+
+    event_idx = np.where(event_observed == 1)[0]
+    nonevent_idx = np.where(event_observed == 0)[0]
+
+    for i in event_idx:
+        for j in nonevent_idx:
+            if predicted_risk[i] > predicted_risk[j]:
+                concordant += 1
+            elif predicted_risk[i] < predicted_risk[j]:
+                discordant += 1
+            else:
+                tied += 1
+
+    total = concordant + discordant + tied
+    if total == 0:
+        return 0.5
+    return (concordant + 0.5 * tied) / total
+
+
 def bootstrap_correlation(
     x: np.ndarray,
     y: np.ndarray,

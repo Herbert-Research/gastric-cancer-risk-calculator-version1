@@ -53,8 +53,8 @@ demo = [
 ]
 
 [project.urls]
-Repository = "https://github.com/Herbert-Research/gastric-cancer-risk-calculator"
-Documentation = "https://github.com/Herbert-Research/gastric-cancer-risk-calculator#readme"
+Repository = "https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1"
+Documentation = "https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1#readme"
 DOI = "Pending - Zenodo DOI will be added after first public release"
 
 [tool.setuptools.packages.find]

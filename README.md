@@ -645,6 +645,8 @@ If your output matches this pattern, the installation is successful.
 **Status:** Educational demonstration (not peer-reviewed, not clinically validated)  
 **Contact:** maximilian.dressler@stud.uni-heidelberg.de
 
+**Development History:** Initial implementation was developed iteratively and committed as logically organized units for clarity. Subsequent refinements and audit fixes are tracked as individual commits. AI-assisted development tools (Claude) were used for code review and testing improvements.
+
 ## Citation
 
 If you use this framework for educational purposes, please cite:
@@ -655,7 +657,7 @@ If you use this framework for educational purposes, please cite:
   title = {Gastric Cancer Risk Stratification Framework},
   year = {2025},
   version = {0.1.1},
-  url = {https://github.com/Herbert-Research/gastric-cancer-risk-calculator},
+  url = {https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1},
   note = {Educational demonstration - not for clinical use}
 }
 ```

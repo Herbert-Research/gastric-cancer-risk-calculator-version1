@@ -647,9 +647,21 @@ def print_survival_summary(results_df: pd.DataFrame) -> None:
     if {"Risk", "survival_5yr"}.issubset(results_df.columns):
         corr_df = results_df[["Risk", "survival_5yr"]].dropna()
         if len(corr_df) > 10:
-            corr = corr_df["Risk"].corr(corr_df["survival_5yr"])
+            from utils.bootstrap import bootstrap_correlation
+
+            corr, ci_low, ci_high = bootstrap_correlation(
+                corr_df["Risk"].to_numpy(),
+                corr_df["survival_5yr"].to_numpy(),
+                n_bootstrap=1000,
+                random_state=42,
+            )
             logger.info("")
-            logger.info("Correlation (Recurrence Risk vs Survival): %.3f", corr)
+            logger.info(
+                "Correlation (Recurrence Risk vs Survival): %.3f (95%% CI: %.3f–%.3f)",
+                corr,
+                ci_low,
+                ci_high,
+            )
             if corr < -0.5:
                 logger.info("  ✓ Strong inverse relationship (as expected)")
             elif corr < -0.3:
@@ -1103,6 +1115,25 @@ def analyze_tcga_cohort(
         if comparison_fig:
             generated_paths.append(comparison_fig)
         print_survival_summary(cohort_results)
+
+        # Compute C-index (discrimination) for survival model against DFS proxy
+        if "event_observed" in cohort_results.columns:
+            from utils.bootstrap import concordance_index
+
+            cindex_df = cohort_results[["survival_5yr", "event_observed"]].dropna()
+            if len(cindex_df) > 10:
+                c_idx = concordance_index(
+                    cindex_df["event_observed"].to_numpy(),
+                    (1 - cindex_df["survival_5yr"]).to_numpy(),
+                )
+                logger.info("")
+                logger.info("Han 2012 C-index (vs. DFS proxy): %.3f", c_idx)
+                if c_idx > 0.65:
+                    logger.info("  ✓ Acceptable discrimination despite imputed variables")
+                else:
+                    logger.info(
+                        "  ⚠ Limited discrimination (expected with 100%% imputation)"
+                    )
 
     return generated_paths
 

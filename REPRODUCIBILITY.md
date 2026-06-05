@@ -269,7 +269,7 @@ python -c "import json; json.load(open('models/han2012_jco.json'))"
 
 If you encounter issues not covered here:
 
-1. Check the [GitHub Issues](https://github.com/your-repo/issues) page
+1. Check the [GitHub Issues](https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1/issues) page
 2. Review the CI logs in `.github/workflows/ci.yml`
 3. Open a new issue with:
    - Your Python version (`python --version`)
@@ -285,11 +285,11 @@ If you use this software for reproducible research, please cite:
 
 ```bibtex
 @software{gastric_cancer_risk_calculator,
-  author = {Martins, Joao},
-  title = {Gastric Cancer Risk Calculator},
-  version = {0.1.0},
+  author = {Dressler, Maximilian Herbert},
+  title = {Gastric Cancer Risk Stratification Framework},
+  version = {0.1.1},
   year = {2025},
-  url = {https://github.com/your-repo}
+  url = {https://github.com/Herbert-Research/gastric-cancer-risk-calculator-version1}
 }
 ```
 
