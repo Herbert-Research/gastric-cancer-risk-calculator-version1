@@ -151,8 +151,9 @@ Due to platform-specific font rendering and floating-point variations, PNG file 
 
 | Metric | Expected Value | 95% CI |
 |--------|----------------|--------|
-| Brier Score (recurrence vs. DFS) | 0.502 | [0.486, 0.518] |
-| Pearson Correlation (survival vs. recurrence) | -0.456 | — |
+| Brier Score (recurrence vs. DFS) | 0.502 | [0.461, 0.538] |
+| Pearson Correlation (survival vs. recurrence) | -0.458 | [-0.512, -0.390] |
+| Han 2012 C-index (vs. DFS proxy) | 0.488 | — |
 | Cohort Size (after QC) | 436 patients | — |
 
 Correlation computed using dataset hash `DBB2106F7DD4A2642109B1CECDA25D2203CBD3BB5F32DBAA548BEC1469B7127A` with seed 42.

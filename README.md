@@ -407,7 +407,7 @@ Examined_LN = {
 
 | Comparison | Pearson r | Interpretation |
 |------------|-----------|----------------|
-| Recurrence Risk vs. 5-yr Survival | -0.456 | Moderate inverse relationship (expected) |
+| Recurrence Risk vs. 5-yr Survival | -0.458 (95% CI: -0.512– -0.390) | Moderate inverse relationship (expected) |
 
 **Expected:** Strong negative correlation (r < -0.7) if both models predict same outcome  
 **Observed:** Moderate correlation suggests different information captured (recurrence-specific vs. overall survival)
@@ -420,7 +420,7 @@ Examined_LN = {
 |-------|-------|--------|---------|-------------|
 | Han et al. 2012 (Original) | Cox (OVS) | n=7,954 | 0.78 | Within 10% |
 | Han et al. 2012 (Validation) | Cox (OVS) | n=2,500 (Japan) | 0.79 | Within 10% |
-| **This Implementation** | Cox (OVS) | n=436 (TCGA) | Not assessed | Not assessed |
+| **This Implementation** | Cox (OVS) | n=436 (TCGA) | 0.488 (vs. DFS proxy) | Not assessed |
 | **This Implementation** | Heuristic (RFS) | n=436 (TCGA) | Not assessed | 0.502 (poor) |
 
 OVS = Overall Survival; RFS = Recurrence-Free Survival
@@ -504,7 +504,7 @@ Data Quality Assessment:
 ⚠️  CRITICAL: >90% variable imputation detected.
    Predictions represent stage-typical, not patient-specific, risk.
    Suitable for cohort-level validation only.
-Brier score (recurrence model vs. DFS): 0.502
+Brier score (recurrence model vs. DFS): 0.502 (95% CI: 0.461–0.538)
 ⚠️  Note: Poor calibration reflects outcome mismatch, not model failure.
     The model predicts recurrence; TCGA provides disease-free survival.
     These are related but distinct clinical endpoints.
@@ -523,12 +523,12 @@ HAN 2012 SURVIVAL MODEL SUMMARY
 ------------------------------------------------------------
 5-Year Survival:
   Mean:   80.6%
-  Median: 81.9%
+  Median: 82.1%
   Range:  55.3% to 94.7%
 
 10-Year Survival:
   Mean:   75.8%
-  Median: 77.3%
+  Median: 77.5%
   Range:  46.5% to 93.2%
 
 Prognosis Categories:
@@ -536,8 +536,11 @@ Prognosis Categories:
   Excellent Prognosis: 143 (32.8%)
   Moderate Prognosis: 49 (11.2%)
 
-Correlation (Recurrence Risk vs Survival): -0.458
+Correlation (Recurrence Risk vs Survival): -0.458 (95% CI: -0.512–-0.390)
   ⚠ Moderate inverse relationship
+
+Han 2012 C-index (vs. DFS proxy): 0.488
+  ⚠ Limited discrimination (expected with 100% imputation)
 
 Generated files:
   - risk_predictions.png

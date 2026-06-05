@@ -1132,7 +1132,7 @@ def analyze_tcga_cohort(
                     logger.info("  ✓ Acceptable discrimination despite imputed variables")
                 else:
                     logger.info(
-                        "  ⚠ Limited discrimination (expected with 100%% imputation)"
+                        "  ⚠ Limited discrimination (expected with 100% imputation)"
                     )
 
     return generated_paths
